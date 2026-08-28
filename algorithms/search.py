@@ -108,9 +108,37 @@ def uniformCostSearch(problem: SearchProblem):
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """
     Search the node that has the lowest combined cost and heuristic first.
+    
+    1. frontera: PQ ordenada por h(n)
+    2. alcanzados: los nodos con su g(n) ya expandidos
+    3. expandir la frontera y revisar los hijos (actualizar si un nodo alcanzado tiene g(n) menor)
+    
     """
-    # TODO: Add your code here
-    utils.raiseNotDefined()
+    nodo = problem.getStartState() # nodo = (position, hasKit, pendingSystems)
+    frontera = utils.PriorityQueue()
+    alcanzados = {} # {nodo: g(nodo)}
+    
+    frontera.push((nodo, [], 0), 0 + heuristic(nodo, problem)) # item: (nodo, acciones, g(nodo) + h(nodo))
+    
+    while not frontera.isEmpty():
+        nodo, acciones, g = frontera.pop()
+        
+        if problem.isGoalState(nodo):
+            return acciones
+        
+        hijos = problem.getSuccessors(nodo)
+        for hijo in hijos:
+            
+            nodo_hijo = hijo[0]
+            nodo_direccion = hijo[1]
+            nodo_costo = hijo[2]
+            
+            if (nodo_hijo not in alcanzados) or (g + nodo_costo < alcanzados[nodo_hijo]):
+                alcanzados[nodo_hijo] = g + nodo_costo
+                frontera.push((nodo_hijo, acciones + [nodo_direccion], alcanzados[nodo_hijo]), heuristic(nodo_hijo, problem) + alcanzados[nodo_hijo])
+        
+    return []
+        
 
 
 # Abbreviations (you can use them for the -f option in main.py)
