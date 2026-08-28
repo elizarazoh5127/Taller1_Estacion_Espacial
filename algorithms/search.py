@@ -34,7 +34,7 @@ def depthFirstSearch(problem: SearchProblem):
     inicio = problem.getStartState()
     pila.push((inicio, []))
     
-    while pila:
+    while not pila.isEmpty():
         lugar, accion = pila.pop()
         if problem.isGoalState(lugar):
             return accion
@@ -59,7 +59,7 @@ def breadthFirstSearch(problem: SearchProblem):
     inicio = problem.getStartState()
     cola.push((inicio, []))
     
-    while cola:
+    while not cola.isEmpty():
         lugar, accion = cola.pop()
         if problem.isGoalState(lugar):
             return accion
@@ -77,10 +77,32 @@ def breadthFirstSearch(problem: SearchProblem):
 def uniformCostSearch(problem: SearchProblem):
     """
     Search the node of least total cost first.
+    debo:
+    1. crear una cola de prioridad
+    2. creal una estrucutra que me permita conocer los nodos visitados
+    3. tomar el nodo del que arranco y meterlo a la cola con costo 0 (es de donde arranque no consumo energia par eso)
+    4. inicio a recorrer la cola de prioridad hasta que este vacia (o si encuentro el objetivo me dentego)
+    5. me aseguro de que cada nodo que visite sea el objetivo, si lo es retorno el camino.
+    6. si no es, añado los sucesores del nodo junto su costo acumulado
     """
-
-    # TODO: Add your code here
-    utils.raiseNotDefined()
+    cola_de_prioridad= utils.PriorityQueue()
+    visitados= set()
+    inicio = problem.getStartState()
+    
+    cola_de_prioridad.push((inicio, [], 0), 0)
+    while cola_de_prioridad.isEmpty()!= True:
+        nodo_actual,pasos_hacia_el_objetivo,cotso_actual= cola_de_prioridad.pop()
+        if nodo_actual not in visitados:
+            visitados.add(nodo_actual)
+            if problem.isGoalState(nodo_actual):
+                return pasos_hacia_el_objetivo
+            
+            for sucesor, accion_sucesor, costo_del_paso in problem.getSuccessors(nodo_actual):
+                if sucesor not in visitados:
+                    camino= pasos_hacia_el_objetivo + [accion_sucesor]
+                    costo_acumulado_pasos=cotso_actual + costo_del_paso
+                    cola_de_prioridad.push((sucesor, camino, costo_acumulado_pasos),costo_acumulado_pasos)
+    return[]
 
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):

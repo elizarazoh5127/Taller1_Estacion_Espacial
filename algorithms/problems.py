@@ -234,17 +234,23 @@ class ModuleRepairProblem(SearchProblem):
         """
         Returns True if the robot reached C after picking up M.
         """
-        # TODO: Add your code here
-        utils.raiseNotDefined()
+        position, hasModule = state
+        return position == self.controlPosition and hasModule
 
     def _getStepCost(self, nextPosition, hasModule):
         """
         Returns the movement cost for entering nextPosition.
 
         """
-        # TODO: Add your code here
-        utils.raiseNotDefined()
-
+        if hasModule == True:
+            costo= self.startingMissionState.getTerrainCost(nextPosition[0], nextPosition[1])
+            costo *=2
+            return costo
+        if hasModule == False:
+            costo= self.startingMissionState.getTerrainCost(nextPosition[0], nextPosition[1])
+            return costo
+        
+        
     def getSuccessors(self, state):
         """
         Returns a list of successors from the current state.
@@ -268,9 +274,30 @@ class ModuleRepairProblem(SearchProblem):
 
         successors = []
         self._expanded += 1
-        # TODO: Add your code here
-
+        position, hasModule = state
+        for direction in [
+            Directions.NORTH,
+            Directions.SOUTH,
+            Directions.EAST,
+            Directions.WEST,
+        ]:
+            x,y =position
+            dx, dy = Actions.directionToVector(direction)
+            nextx= int(x + dx) 
+            nexty = int(y + dy)
+            if not self.walls[nextx][nexty]:
+                nextPosition = (nextx, nexty)
+                stepCost = self._getStepCost(nextPosition, hasModule)
+                if nextPosition == self.modulePosition:
+                    nextHasModule = True    
+                else:
+                    nextHasModule = hasModule
+                nextState = (nextPosition, nextHasModule)
+                successors.append((nextState, direction, stepCost))
+                
         return successors
+    
+        
 
     def getCostOfActions(self, actions):
         """
