@@ -3,6 +3,8 @@ from algorithms import utils
 from algorithms.problems import SystemRepairProblem
 from math import sqrt
 
+def manhattan_distance(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def nullHeuristic(state, problem=None):
     """
@@ -27,11 +29,11 @@ def manhattanHeuristic(state, problem):
     pendingSystems = state[2]
     
     if not hasKit:
-        return abs(pos[0] - problem.kitPosition[0]) + abs(pos[1] - problem.kitPosition[1])
+        return manhattan_distance(pos, problem.kitPosition)
     
     elif len(pendingSystems) != 0:
         closest_t = pendingSystems[0]
-        closest_t_distance = abs(pos[0] - closest_t[0]) + abs(pos[1] - closest_t[1])
+        closest_t_distance = manhattan_distance(pos, closest_t)
         
         for t in pendingSystems:
             current_t_distance = abs(pos[0] - t[0]) + abs(pos[1] - t[1])
@@ -42,7 +44,7 @@ def manhattanHeuristic(state, problem):
         return closest_t_distance
     
     else:
-        return abs(pos[0] - problem.controlPosition[0]) + abs(pos[1] - problem.controlPosition[1])
+        return manhattan_distance(pos, problem.controlPosition)
         
 
 
@@ -63,7 +65,7 @@ def euclideanHeuristic(state, problem):
     if not hasKit:
         return sqrt((pos[0] - problem.kitPosition[0])**2 + (pos[1] - problem.kitPosition[1])**2)
     
-    elif len(pendingSystems) != 0:
+    elif pendingSystems:
         closest_t = pendingSystems[0]
         closest_t_distance = sqrt((pos[0] - closest_t[0])**2 + (pos[1] - closest_t[1])**2)
         
@@ -79,22 +81,32 @@ def euclideanHeuristic(state, problem):
         return sqrt((pos[0] - problem.controlPosition[0])**2 + (pos[1] - problem.controlPosition[1])**2)
 
 
-def systemRepairHeuristic(
-    state: Tuple[Tuple, bool, Tuple], problem: SystemRepairProblem
-):
+def systemRepairHeuristic(state: Tuple[Tuple, bool, Tuple], problem: SystemRepairProblem):
     """
-    Your heuristic for the SystemRepairProblem.
-
-    state: (position, hasKit, pendingSystems)
-    problem: SystemRepairProblem instance
-
-    This must be admissible and preferably consistent.
-
-    Hints:
-    - Use problem.heuristicInfo to cache expensive computations
-    - Go with some simple heuristics first, then build up to more complex ones
-    - Consider the kit, pending systems, and the final return to control center
-    - Balance heuristic strength vs. computation time (do experiments!)
+    Distancia al punto obligatorio más cercano (K o T) + la distancia directa de ahí a C. 
+    Admisible porque nunca sobreestima y a diferencia de manhattan/euclidean sí cuenta el regreso a C.
     """
-    # TODO: Add your code here
-    utils.raiseNotDefined()
+    position, hasKit, pendingSystems = state
+
+    if problem.isGoalState(state):
+        return 0
+
+    if not hasKit:
+        nextPoint = problem.kitPosition
+    
+    elif pendingSystems:
+       
+        nextPoint = pendingSystems[0]
+        nextPointTotal = manhattan_distance(position, nextPoint) + manhattan_distance(nextPoint, problem.controlPosition)
+
+        for t in pendingSystems:
+
+            t_total = manhattan_distance(position, t) + manhattan_distance(t, problem.controlPosition)
+            if t_total < nextPointTotal:
+                nextPoint = t
+                nextPointTotal = t_total
+    
+    else:
+        nextPoint = problem.controlPosition
+
+    return manhattan_distance(position, nextPoint) + manhattan_distance(nextPoint, problem.controlPosition)
